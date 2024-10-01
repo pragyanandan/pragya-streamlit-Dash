@@ -10,14 +10,38 @@ st.set_page_config(page_title="Superstore!!!", page_icon=":bar_chart:",layout="w
 st.title(" :bar_chart: Sample SuperStore EDA")
 st.markdown('<style>div.block-container{padding-top:1rem;}</style>',unsafe_allow_html=True)
 
-fl = st.file_uploader(":file_folder: Upload a file",type=(["csv","txt","xlsx","xls"]))
+
+# Define the default path to the Superstore CSV file
+default_file_path = "Superstore.csv"
+
+# Check if a file is uploaded by the user
+fl = st.file_uploader("Upload a CSV file", type=["csv"])
+
 if fl is not None:
+    # If a file is uploaded, use it
     filename = fl.name
-    st.write(filename)
-    df = pd.read_csv(filename, encoding = "ISO-8859-1")
+    st.write(f"Using uploaded file: {filename}")
+    df = pd.read_csv(fl, encoding="ISO-8859-1")
 else:
-    os.chdir(r"C:\Users\AEPAC\Desktop\Streamlit")
-    df = pd.read_csv("Superstore.csv", encoding = "ISO-8859-1")
+    # If no file is uploaded, check if default path exists
+    if os.path.exists(default_file_path):
+        st.write(f"Using default file: {default_file_path}")
+        df = pd.read_csv(default_file_path, encoding="ISO-8859-1")
+    else:
+        # If the default path does not exist, try to use the file in the same directory as the script
+        script_dir = os.path.dirname(os.path.abspath(__file__))  # Get the directory of the script
+        fallback_file = os.path.join(script_dir, "Superstore.csv")
+        if os.path.exists(fallback_file):
+            st.write(f"Using fallback file in script directory: {fallback_file}")
+            df = pd.read_csv(fallback_file, encoding="ISO-8859-1")
+        else:
+            # If no file is found, raise an error
+            st.error("No valid CSV file found. Please upload a file or place Superstore.csv in the script directory.")
+            df = None
+
+if df is not None:
+    st.write("Displaying the first few rows of the dataset:")
+    st.dataframe(df.head())
 
 col1, col2 = st.columns((2))
 df["Order Date"] = pd.to_datetime(df["Order Date"])
